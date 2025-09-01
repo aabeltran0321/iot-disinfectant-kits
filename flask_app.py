@@ -12,7 +12,8 @@ def init_db():
             CREATE TABLE IF NOT EXISTS schedules (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 tank INTEGER,
-                activation_time TEXT
+                activation_time TEXT,
+                duration_seconds INTEGER
             )
         """)
         cursor.execute("""
@@ -39,9 +40,14 @@ def index():
 def schedule():
     tank = int(request.form["tank"])
     activation_time = request.form["time"]
+    minutes = int(request.form["minutes"] or 0)
+    seconds = int(request.form["seconds"] or 0)
+    duration_seconds = minutes * 60 + seconds
+
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO schedules (tank, activation_time) VALUES (?, ?)", (tank, activation_time))
+        cursor.execute("INSERT INTO schedules (tank, activation_time, duration_seconds) VALUES (?, ?, ?)",
+                       (tank, activation_time, duration_seconds))
         conn.commit()
     return redirect(url_for("index"))
 
@@ -59,12 +65,12 @@ def get_schedule(tank):
     now = datetime.now().strftime("%H:%M")
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM schedules WHERE tank=? AND activation_time=?", (tank, now))
+        cursor.execute("SELECT id, duration_seconds FROM schedules WHERE tank=? AND activation_time=?", (tank, now))
         row = cursor.fetchone()
         if row:
             cursor.execute("DELETE FROM schedules WHERE id=?", (row[0],))
             conn.commit()
-            return jsonify({"activate": True})
+            return jsonify({"activate": True, "duration": row[1]})
     return jsonify({"activate": False})
 
 @app.route("/update_level", methods=["POST"])

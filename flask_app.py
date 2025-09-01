@@ -38,7 +38,7 @@ def index():
         "tank_levels": tank_levels
     }
 
-# ESP32 polls this endpoint
+# ESP32 polls this endpoint for its tank
 @app.route("/get_schedule/<int:tank>", methods=["GET"])
 def get_schedule(tank):
     now = datetime.now().strftime("%H:%M")
@@ -52,7 +52,7 @@ def get_schedule(tank):
             return jsonify({"activate": True})
     return jsonify({"activate": False})
 
-# ESP32 sends level updates
+# ESP32 sends tank level
 @app.route("/update_level", methods=["POST"])
 def update_level():
     data = request.json
@@ -64,6 +64,7 @@ def update_level():
         conn.commit()
     return jsonify({"status": "updated"})
 
+# Admin schedules disinfection
 @app.route("/schedule", methods=["POST"])
 def schedule():
     tank = int(request.form["tank"])

@@ -4,17 +4,18 @@
 #include <EEPROM.h>
 
 #define EEPROM_SIZE 128
+#define RELAY_PIN D1
+#define TANK_ID 2   // which tank this ESP8266 controls
 
 // Define server domain (can be IP or hostname)
 const char* serverDomain = "http://10.10.121.81:5000";
 const char* serverDomain11 = "http://bigboysautomation.pythonanywhere.com";
 
 // Build URLs from domain
-String scheduleURL = String(serverDomain11) + "/iotdisinfectant/get_schedule/1";
+String scheduleURL = String(serverDomain11) + "/iotdisinfectant/get_schedule/" + String(TANK_ID);
 String updateLevelURL = String(serverDomain11) + "/iotdisinfectant/update_level";
 
-#define RELAY_PIN D1
-#define TANK_ID 1   // which tank this ESP8266 controls
+
 
 unsigned long lastCheck = 0;
 unsigned long lastUpdate = 0;

@@ -85,6 +85,15 @@ def iotdisinfectant_update_level():
         conn.commit()
     return jsonify({"status": "updated"})
 
+@app.route("/iotdisinfectant/tank_levels")
+def get_tank_levels():
+    with sqlite3.connect(iotdisinfectant_DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM tank_levels")
+        tank_levels = cursor.fetchall()
+    return jsonify(tank_levels)
+
+
 if __name__ == "__main__":
     iotdisinfectant_init_db()
     app.run(host="0.0.0.0", port=5000)

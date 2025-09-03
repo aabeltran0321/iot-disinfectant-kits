@@ -101,5 +101,36 @@
     </div>
 
 </div>
+
+<script>
+    function fetchTankLevels() {
+        fetch("/iotdisinfectant/tank_levels")  // Flask route to return JSON
+            .then(response => response.json())
+            .then(data => {
+                let container = document.getElementById("tank-levels");
+                container.innerHTML = "";
+                data.forEach(([tank, level]) => {
+                    let status = level === 1 ? "Full" : "Empty";
+                    let colorClass = level === 1 ? "text-success" : "text-danger";
+                    container.innerHTML += `
+                        <div class="col-12 col-md-6">
+                            <div class="card shadow-sm h-100 text-center">
+                                <div class="card-body">
+                                    <h4 class="card-title">Tank ${tank}</h4>
+                                    <p class="fs-2 fw-bold ${colorClass}">
+                                        ${status}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            })
+            .catch(err => console.error("Error fetching tank levels:", err));
+    }
+
+    // Refresh every 5 seconds
+    setInterval(fetchTankLevels, 5000);
+</script>
 </body>
 </html>

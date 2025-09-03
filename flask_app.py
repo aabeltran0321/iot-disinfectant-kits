@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import sqlite3
 from datetime import datetime
-from datetime import datetime, timedelta
 import pytz
 
 app = Flask(__name__)
@@ -42,30 +41,16 @@ def iotdisinfectant_index():
 @app.route("/iotdisinfectant/schedule", methods=["POST"])
 def iotdisinfectant_schedule():
     tank = int(request.form["tank"])
-    activation_time_str = request.form["time"]  # assuming format like "2025-09-03 14:30"
-
-    # Parse time as naive datetime (assuming input is local or UTC)
-    activation_time = datetime.strptime(activation_time_str, "%Y-%m-%d %H:%M")
-
-    # Convert to GMT+8 (Asia/Manila / Asia/Taipei timezone)
-    gmt8 = pytz.timezone("Asia/Manila")
-    activation_time_gmt8 = gmt8.localize(activation_time)
-
-    # Store as string in DB (formatted)
-    activation_time_str = activation_time_gmt8.strftime("%Y-%m-%d %H:%M:%S")
-
+    activation_time = request.form["time"]
     minutes = int(request.form["minutes"] or 0)
     seconds = int(request.form["seconds"] or 0)
     duration_seconds = minutes * 60 + seconds
 
     with sqlite3.connect(iotdisinfectant_DB_NAME) as conn:
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO schedules (tank, activation_time, duration_seconds) VALUES (?, ?, ?)",
-            (tank, activation_time_str, duration_seconds),
-        )
+        cursor.execute("INSERT INTO schedules (tank, activation_time, duration_seconds) VALUES (?, ?, ?)",
+                       (tank, activation_time, duration_seconds))
         conn.commit()
-
     return redirect(url_for("iotdisinfectant_index"))
 
 @app.route("/iotdisinfectant/delete_schedule/<int:id>")
@@ -79,7 +64,8 @@ def iotdisinfectant_delete_schedule(id):
 # --- API Endpoints (for ESP32s) ---
 @app.route("/iotdisinfectant/get_schedule/<int:tank>", methods=["GET"])
 def iotdisinfectant_get_schedule(tank):
-    now = datetime.now().strftime("%H:%M")
+    gmt8 = pytz.timezone("Asia/Manila")
+    now = datetime.now(gmt8).strftime("%H:%M")
     with sqlite3.connect(iotdisinfectant_DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, duration_seconds FROM schedules WHERE tank=? AND activation_time=?", (tank, now))

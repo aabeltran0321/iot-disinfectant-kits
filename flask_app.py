@@ -3,10 +3,11 @@ import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
-DB_NAME = "schedule.db"
+extension = "./"
+iotdisinfectant_DB_NAME = f"{extension}iotdisinfectant_schedule.db"
 
-def init_db():
-    with sqlite3.connect(DB_NAME) as conn:
+def iotdisinfectant_init_db():
+    with sqlite3.connect(iotdisinfectant_DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS schedules (
@@ -26,44 +27,44 @@ def init_db():
             cursor.execute("INSERT OR IGNORE INTO tank_levels (tank, level) VALUES (?, ?)", (tank, 1))
         conn.commit()
 
-@app.route("/")
-def index():
-    with sqlite3.connect(DB_NAME) as conn:
+@app.route("/iotdisinfectant")
+def iotdisinfectant_index():
+    with sqlite3.connect(iotdisinfectant_DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM schedules ORDER BY activation_time")
         schedules = cursor.fetchall()
         cursor.execute("SELECT * FROM tank_levels")
         tank_levels = cursor.fetchall()
-    return render_template("index.html", schedules=schedules, tank_levels=tank_levels)
+    return render_template("iotdisinfectant_index.html", schedules=schedules, tank_levels=tank_levels)
 
-@app.route("/schedule", methods=["POST"])
-def schedule():
+@app.route("/iotdisinfectant/schedule", methods=["POST"])
+def iotdisinfectant_schedule():
     tank = int(request.form["tank"])
     activation_time = request.form["time"]
     minutes = int(request.form["minutes"] or 0)
     seconds = int(request.form["seconds"] or 0)
     duration_seconds = minutes * 60 + seconds
 
-    with sqlite3.connect(DB_NAME) as conn:
+    with sqlite3.connect(iotdisinfectant_DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute("INSERT INTO schedules (tank, activation_time, duration_seconds) VALUES (?, ?, ?)",
                        (tank, activation_time, duration_seconds))
         conn.commit()
-    return redirect(url_for("index"))
+    return redirect(url_for("iotdisinfectant_index"))
 
-@app.route("/delete_schedule/<int:id>")
-def delete_schedule(id):
-    with sqlite3.connect(DB_NAME) as conn:
+@app.route("/iotdisinfectant/delete_schedule/<int:id>")
+def iotdisinfectant_delete_schedule(id):
+    with sqlite3.connect(iotdisinfectant_DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM schedules WHERE id=?", (id,))
         conn.commit()
-    return redirect(url_for("index"))
+    return redirect(url_for("iotdisinfectant_index"))
 
 # --- API Endpoints (for ESP32s) ---
-@app.route("/get_schedule/<int:tank>", methods=["GET"])
-def get_schedule(tank):
+@app.route("/iotdisinfectant/get_schedule/<int:tank>", methods=["GET"])
+def iotdisinfectant_get_schedule(tank):
     now = datetime.now().strftime("%H:%M")
-    with sqlite3.connect(DB_NAME) as conn:
+    with sqlite3.connect(iotdisinfectant_DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, duration_seconds FROM schedules WHERE tank=? AND activation_time=?", (tank, now))
         row = cursor.fetchone()
@@ -73,17 +74,17 @@ def get_schedule(tank):
             return jsonify({"activate": True, "duration": row[1]})
     return jsonify({"activate": False})
 
-@app.route("/update_level", methods=["POST"])
-def update_level():
+@app.route("/iotdisinfectant/update_level", methods=["POST"])
+def iotdisinfectant_update_level():
     data = request.json
     tank = data.get("tank")
     level = data.get("level")
-    with sqlite3.connect(DB_NAME) as conn:
+    with sqlite3.connect(iotdisinfectant_DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute("UPDATE tank_levels SET level=? WHERE tank=?", (level, tank))
         conn.commit()
     return jsonify({"status": "updated"})
 
 if __name__ == "__main__":
-    init_db()
-    app.run(host="0.0.0.0", port=80)
+    iotdisinfectant_init_db()
+    app.run(host="0.0.0.0", port=5000)

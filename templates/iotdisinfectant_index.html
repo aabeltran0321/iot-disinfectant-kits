@@ -55,7 +55,7 @@
                             <td>{{ activation_time }}</td>
                             <td>{{ duration_seconds // 60 }}m {{ duration_seconds % 60 }}s</td>
                             <td>
-                                <a href="{{ url_for('delete_schedule', id=id) }}" 
+                                <a href="{{ url_for('iotdisinfectant_delete_schedule', id=id) }}" 
                                    class="btn btn-sm btn-danger fs-mobile w-100">Delete</a>
                             </td>
                         </tr>
@@ -73,7 +73,7 @@
     <div class="card shadow-sm">
         <div class="card-header bg-success text-white text-center">Add New Schedule</div>
         <div class="card-body">
-            <form method="post" action="/schedule" class="row g-3">
+            <form method="post" action="./iotdisinfectant/schedule" class="row g-3">
                 <div class="col-12">
                     <label class="form-label">Tank</label>
                     <select name="tank" class="form-select fs-mobile" required>

@@ -177,7 +177,7 @@ void checkSchedule() {
 
 void updateTankLevel() {
   if (WiFi.status() == WL_CONNECTED) {
-    int level = !digitalRead(D5);  
+    int level = digitalRead(D5);  
     //int level = map(sensorValue, 0, 1023, 0, 100); // Example: 0–100% scale
 
     HTTPClient http;
